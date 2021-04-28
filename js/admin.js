@@ -1,18 +1,15 @@
 const orderPageList = document.querySelector('.orderPage-table-tbody');
-
 let orderData = [];
+
 function init() {
-  getOrderData()
+  getOrderData();
 }
 init();
 
 //取得訂單資料
 function getOrderData() {
-  axios.get(`https://hexschoollivejs.herokuapp.com/api/livejs/v1/admin/a4545109/orders`, {
-    headers: {
-      "authorization": token
-    }
-  }).then(function (res) {
+  axios.get(`${baseUrl}/admin/${api_path}/orders`, config)
+  .then(function (res) {
     orderData = res.data.orders;
     renderOrder()
   }).catch(function (error) {
@@ -64,7 +61,7 @@ function renderOrder(){
     `;
   })
   orderPageList.innerHTML = str;
-  renderChart();
+  getchartData()
 }
 
 //監聽狀態、刪除按鈕
@@ -87,28 +84,22 @@ orderPageList.addEventListener('click', function(e){
 //更新訂單狀態
 function updateOrderStatus(orderId, status){
   let newStatus;
+  let updateData = {
+    data:{
+      id: orderId,
+      paid: newStatus
+    }
+  };
+
   if(status == "true"){
     newStatus = false;
-    console.log(newStatus);
   }else{
     newStatus = true;
-    console.log(newStatus);
   }
   
-  axios.put(`https://hexschoollivejs.herokuapp.com/api/livejs/v1/admin/a4545109/orders`,
-    {
-      "data":{
-        "id": orderId,
-        "paid": newStatus
-      }
-    },
-    {
-      headers:{
-        'authorization': token
-      }
-  })
+  axios.put(`${baseUrl}/admin/${api_path}/orders`, updateData, config)
   .then(function(res){
-    getOrderData();
+    renderOrder();
   })
   .catch(function(error){
     console.log(error);
@@ -117,13 +108,9 @@ function updateOrderStatus(orderId, status){
 
 //刪除單一訂單
 function deleteOrderItem(orderId){
-  axios.delete(`https://hexschoollivejs.herokuapp.com/api/livejs/v1/admin/a4545109/orders/${orderId}`,{
-    headers:{
-      'authorization': token
-    }
-  })
+  axios.delete(`${baseUrl}/admin/${api_path}/orders/${orderId}`, config)
   .then(function(res){
-    getOrderData();
+    renderOrder();
   })
   .catch(function(error){
     console.log(error);
@@ -134,13 +121,9 @@ function deleteOrderItem(orderId){
 const discardAllBtn = document.querySelector('.discardAllBtn');
 function deleteAllOrder(e){
   e.preventDefault();
-  axios.delete(`https://hexschoollivejs.herokuapp.com/api/livejs/v1/admin/a4545109/orders`,{
-    headers:{
-      'authorization': token
-    }
-  })
+  axios.delete(`${baseUrl}/admin/${api_path}/orders`, config)
   .then(function(res){
-    getOrderData();
+    renderOrder();
   })
   .catch(function(error){
     console.log(error);
@@ -148,8 +131,8 @@ function deleteAllOrder(e){
 }
 discardAllBtn.addEventListener('click', deleteAllOrder)
 
-//渲染圖表
-function renderChart(){
+//整理圖表資料
+function getchartData(){
   let orderTotalObj = {};
   orderData.forEach(function(item){
     item.products.forEach(function(productItem){
@@ -169,7 +152,11 @@ function renderChart(){
     Ary.push(orderTotalObj[item]);
     newAry.push(Ary);
   })
-  
+  renderChart(newAry)
+}
+
+//渲染圖表
+function renderChart(newAry){
   let chart = c3.generate({
     bindto: '#chart', // HTML 元素綁定
     data: {

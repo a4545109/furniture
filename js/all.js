@@ -19,7 +19,7 @@ function init(){
 
 //取得產品資料
 function getData(){
-  axios.get(`https://hexschoollivejs.herokuapp.com/api/livejs/v1/customer/${api_path}/products`)
+  axios.get(`${baseUrl}/customer/${api_path}/products`)
     .then(function(res){
       data = res.data.products;
       renderProduct(data);
@@ -31,7 +31,7 @@ function getData(){
 
 //取得購物車資料
 function getCartData(){
-  axios.get(`https://hexschoollivejs.herokuapp.com/api/livejs/v1/customer/${api_path}/carts`)
+  axios.get(`${baseUrl}/customer/${api_path}/carts`)
     .then(function(res){
       cartData = res.data.carts;
       finalTotal = res.data.finalTotal;
@@ -141,7 +141,7 @@ function addCart(e){
     }
   })
   // console.log(cartData);
-  axios.post('https://hexschoollivejs.herokuapp.com/api/livejs/v1/customer/a4545109/carts',
+  axios.post(`${baseUrl}/customer/${api_path}/carts`,
   {
     "data": {
       "productId": productId,
@@ -149,7 +149,7 @@ function addCart(e){
     }
   }).then(function(){
       alert("已經加入購物車")
-      getCartData()
+      renderCart();
     })
     .catch(function(error){
       console.log(error);
@@ -161,9 +161,9 @@ productWrap.addEventListener('click', addCart);
 const discardAllBtn = document.querySelector('.discardAllBtn');
 function deleteAllData(e){
   e.preventDefault();
-  axios.delete('https://hexschoollivejs.herokuapp.com/api/livejs/v1/customer/a4545109/carts')
+  axios.delete(`${baseUrl}/customer/${api_path}/carts`)
     .then(function(res){
-      getCartData()
+      renderCart()
     })
     .catch(function(error){
       console.log(error);
@@ -178,10 +178,10 @@ function deleteSingleData(e){
   if(e.target.getAttribute('class') !== 'material-icons'){
     return;
   }
-  axios.delete(`https://hexschoollivejs.herokuapp.com/api/livejs/v1/customer/a4545109/carts/${cartId}`)
+  axios.delete(`${baseUrl}/customer/${api_path}/carts/${cartId}`)
     .then(function(res){
       alert("已經刪除此筆資料");
-      getCartData()
+      renderCart()
     })
     .catch(function(error){
       alert("購物車已清空");
@@ -209,6 +209,17 @@ const sendOrder = document.querySelector('.orderInfo-btn');
 
 function sendOrderInfo(e){
   e.preventDefault();
+  let orderData = {
+    data: {
+      user: {
+        name: customerName.value,
+        tel: customerPhone.value,
+        email: customerEmail.value,
+        address: customerAddress.value,
+        payment: tradeWay.value
+      }
+    }
+  };
   if(cartData.length ==0){
     alert("請加入購物車")
     return;
@@ -221,17 +232,8 @@ function sendOrderInfo(e){
       alert("請填寫完整資料")
       return
     }
-  axios.post(`https://hexschoollivejs.herokuapp.com/api/livejs/v1/customer/a4545109/orders`,{
-    "data": {
-      "user": {
-        "name": customerName.value,
-        "tel": customerPhone.value,
-        "email": customerEmail.value,
-        "address": customerAddress.value,
-        "payment": tradeWay.value
-      }
-    }
-  }).then(function(res){
+  axios.post(`${baseUrl}/customer/${api_path}/orders`, orderData)
+  .then(function(res){
     alert("訂單建立成功");
     customerName.value = '';
     customerPhone.value = '';
@@ -239,7 +241,8 @@ function sendOrderInfo(e){
     customerAddress.value = '';
     tradeWay.value = 'ATM';
     getCartData();
-  }).catch(function(error){
+  })
+  .catch(function(error){
     console.log(error);
   })
 }
